@@ -232,15 +232,15 @@ label { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:0.04
 <div id="screen-feed" class="screen">
   <div class="topnav">
     <div><div class="logo">DropIt</div><div class="logo-sub">what's everyone watching?</div></div>
-    <div class="icon-btn">🔔</div>
+    <div class="icon-btn" onclick="showScreen('notifications')">🔔</div>
   </div>
   <div class="feed-header-row" id="filter-row"></div>
   <div class="feed-scroll" id="feed-container"></div>
   <div class="bottomnav">
     <div class="bnav-item active" id="tab-feed" onclick="switchTab('feed')"><span class="bnav-icon">🏠</span><span class="bnav-label">Feed</span></div>
-    <div class="bnav-item" id="tab-discover"><span class="bnav-icon">🔍</span><span class="bnav-label">Discover</span></div>
+    <div class="bnav-item" id="tab-discover" onclick="showScreen('discover')"><span class="bnav-icon">🔍</span><span class="bnav-label">Discover</span></div>
     <div class="bnav-post" onclick="showScreen('post')">＋</div>
-    <div class="bnav-item" id="tab-saved"><span class="bnav-icon">🔖</span><span class="bnav-label">Saved</span></div>
+    <div class="bnav-item" id="tab-saved" onclick="showScreen('saved')"><span class="bnav-icon">🔖</span><span class="bnav-label">Saved</span></div>
     <div class="bnav-item" id="tab-profile" onclick="showScreen('profile')"><span class="bnav-icon">👤</span><span class="bnav-label">Profile</span></div>
   </div>
 </div>
@@ -295,6 +295,60 @@ label { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:0.04
   </div>
 </div>
 
+<!-- DISCOVER -->
+<div id="screen-discover" class="screen">
+  <div class="topnav" style="padding-bottom:16px;">
+    <div class="logo">Discover</div>
+  </div>
+  <div style="padding:0 16px;flex:1;overflow-y:auto;">
+    <div style="position:relative;margin-bottom:16px;">
+      <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted);pointer-events:none">🔍</div>
+      <input class="input" style="padding-left:42px" placeholder="Search shows and movies..." oninput="handleDiscoverSearch(this.value)" id="discover-search"/>
+    </div>
+    <div id="discover-results"></div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;margin-top:8px">Browse by mood</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="mood-chips"></div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">Trending this week</div>
+    <div id="trending-list"></div>
+  </div>
+  <div class="bottomnav">
+    <div class="bnav-item" id="tab-feed2" onclick="showScreen('feed')"><span class="bnav-icon">🏠</span><span class="bnav-label">Feed</span></div>
+    <div class="bnav-item active" id="tab-discover2"><span class="bnav-icon">🔍</span><span class="bnav-label" style="color:var(--purple)">Discover</span></div>
+    <div class="bnav-post" onclick="showScreen('post')">＋</div>
+    <div class="bnav-item" onclick="showScreen('saved')"><span class="bnav-icon">🔖</span><span class="bnav-label">Saved</span></div>
+    <div class="bnav-item" onclick="showScreen('profile')"><span class="bnav-icon">👤</span><span class="bnav-label">Profile</span></div>
+  </div>
+</div>
+
+<!-- SAVED -->
+<div id="screen-saved" class="screen">
+  <div class="topnav" style="padding-bottom:16px;">
+    <div class="logo">Watchlist</div>
+    <div class="icon-btn" onclick="showScreen('feed')" style="font-size:18px">←</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 16px">
+    <div id="saved-list" style="display:flex;flex-direction:column;gap:12px;padding:0 16px 100px"></div>
+  </div>
+  <div class="bottomnav">
+    <div class="bnav-item" onclick="showScreen('feed')"><span class="bnav-icon">🏠</span><span class="bnav-label">Feed</span></div>
+    <div class="bnav-item" onclick="showScreen('discover')"><span class="bnav-icon">🔍</span><span class="bnav-label">Discover</span></div>
+    <div class="bnav-post" onclick="showScreen('post')">＋</div>
+    <div class="bnav-item active"><span class="bnav-icon">🔖</span><span class="bnav-label" style="color:var(--purple)">Saved</span></div>
+    <div class="bnav-item" onclick="showScreen('profile')"><span class="bnav-icon">👤</span><span class="bnav-label">Profile</span></div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="screen-notifications" class="screen">
+  <div class="topnav" style="padding-bottom:16px;">
+    <div class="logo">Notifications</div>
+    <div class="icon-btn" onclick="showScreen('feed')" style="font-size:18px">←</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div id="notif-list" style="padding:16px 16px 100px;display:flex;flex-direction:column;gap:0"></div>
+  </div>
+</div>
+
 </div>
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
@@ -324,11 +378,16 @@ function hash(s,arr){ let h=0; for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<
 // ── SCREEN ──────────────────────────────────────────────────
 function showScreen(name, authMode){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+name).classList.add('active');
+  const el = document.getElementById('screen-'+name);
+  if(!el){ console.warn('No screen:', name); return; }
+  el.classList.add('active');
   if(name==='auth'&&authMode){ S.isSignup=authMode==='signup'; renderAuth(); }
   if(name==='feed') loadFeed();
   if(name==='profile') loadProfile();
   if(name==='post') resetPost();
+  if(name==='discover') showScreen_discover();
+  if(name==='saved') loadSaved();
+  if(name==='notifications') loadNotifications();
 }
 function switchTab(tab){ document.querySelectorAll('.bnav-item').forEach(i=>i.classList.remove('active')); document.getElementById('tab-'+tab)?.classList.add('active'); }
 
@@ -495,31 +554,31 @@ function resetPost(){
   S.selectedShow=null;
 }
 
-let stimer;
+let stimer, tmdbCache=[];
 async function handleSearch(val){
   clearTimeout(stimer);
   const rc=document.getElementById('search-results-container');
-  if(!val.trim()){ rc.innerHTML=''; return; }
+  if(!val.trim()){ rc.innerHTML=''; tmdbCache=[]; return; }
   stimer=setTimeout(async()=>{
-    rc.innerHTML=`<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">Searching TMDB...</div>`;
+    rc.innerHTML=`<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">Searching...</div>`;
     try{
-      const res=await fetch(`https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(val)}&include_adult=false&language=en-US&page=1`,
-        { headers:{ Authorization:`Bearer ${TMDB_KEY}`, accept:'application/json' }});
+      const res=await fetch('https://api.themoviedb.org/3/search/multi?api_key='+TMDB_KEY+'&query='+encodeURIComponent(val)+'&include_adult=false&language=en-US&page=1');
+      if(!res.ok) throw new Error('Status '+res.status);
       const data=await res.json();
-      const results=(data.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').slice(0,6);
-      if(!results.length){ rc.innerHTML=`<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">No results found</div>`; return; }
-      rc.innerHTML=`<div class="search-results">${results.map(r=>{
+      tmdbCache=(data.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').slice(0,6);
+      if(!tmdbCache.length){ rc.innerHTML=`<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">No results found</div>`; return; }
+      rc.innerHTML='<div class="search-results">'+tmdbCache.map((r,i)=>{
         const title=r.title||r.name, year=(r.release_date||r.first_air_date||'').slice(0,4), rating=r.vote_average?r.vote_average.toFixed(1):'N/A';
-        const poster=r.poster_path?`<img class="sr-poster" src="${TMDB_IMG}${r.poster_path}" loading="lazy">`:`<div class="sr-poster" style="background:var(--surface);display:flex;align-items:center;justify-content:center">🎬</div>`;
-        const enc=encodeURIComponent(JSON.stringify({title,year,rating,poster_path:r.poster_path||'',lang:r.original_language||'en',media:r.media_type}));
-        return `<div class="sr-item" onclick="selectShow('${enc}')">${poster}<div class="sr-info"><div class="sr-title">${title}</div><div class="sr-meta">${year} · ${r.media_type==='tv'?'TV Series':'Movie'}</div></div><div class="sr-rating">⭐ ${rating}</div></div>`;
-      }).join('')}</div>`;
-    } catch(e){ rc.innerHTML=`<div style="padding:14px;color:#F09595;font-size:13px;text-align:center">Search failed — check TMDB key</div>`; }
+        const poster=r.poster_path?'<img class="sr-poster" src="'+TMDB_IMG+r.poster_path+'" loading="lazy">':'<div class="sr-poster" style="background:var(--surface);display:flex;align-items:center;justify-content:center">🎬</div>';
+        return '<div class="sr-item" onclick="selectShow('+i+'">'+poster+'<div class="sr-info"><div class="sr-title">'+title+'</div><div class="sr-meta">'+year+' · '+(r.media_type==='tv'?'TV Series':'Movie')+'</div></div><div class="sr-rating">⭐ '+rating+'</div></div>';
+      }).join('')+'</div>';
+    } catch(e){ console.error(e); rc.innerHTML='<div style="padding:14px;color:#F09595;font-size:13px;text-align:center">Search failed: '+e.message+'</div>'; }
   },400);
 }
 
-function selectShow(enc){
-  const show=JSON.parse(decodeURIComponent(enc));
+function selectShow(idx){
+  const r=tmdbCache[idx]; if(!r) return;
+  const show={title:r.title||r.name, year:(r.release_date||r.first_air_date||'').slice(0,4), rating:r.vote_average?r.vote_average.toFixed(1):'N/A', poster_path:r.poster_path||'', lang:r.original_language||'en', media:r.media_type};
   S.selectedShow=show;
   document.getElementById('search-results-container').innerHTML='';
   document.getElementById('show-search').value=show.title;
@@ -579,6 +638,104 @@ async function loadProfile(){
     const poster=d.poster_url?`<img class="pdi-poster" src="${TMDB_IMG}${d.poster_url}" loading="lazy">`:`<div class="pdi-poster ${ph}" style="display:flex;align-items:center;justify-content:center">🎬</div>`;
     return `<div class="pdi">${poster}<div style="flex:1"><div class="pdi-title">${d.show_title}</div><div class="pdi-meta">${d.show_year||''} · ${d.show_lang||''}</div></div><div class="pdi-likes">❤️ ${num(d.likes||0)}</div></div>`;
   }).join('');
+}
+
+
+// ── DISCOVER ────────────────────────────────────────────────
+const MOODS = ['Thriller','Comedy','Sci-Fi','Romance','Crime','Horror','Drama','Action','Hindi','Korean'];
+const MOOD_COLORS = {'Thriller':'tag-purple','Comedy':'tag-lime','Sci-Fi':'tag-blue','Romance':'tag-pink','Crime':'tag-purple','Horror':'tag-orange','Drama':'tag-pink','Action':'tag-orange','Hindi':'tag-lime','Korean':'tag-blue'};
+
+async function showScreen_discover(){
+  // render mood chips
+  document.getElementById('mood-chips').innerHTML = MOODS.map(m =>
+    `<div class="filter-chip" onclick="discoverByMood('${m}')" style="cursor:pointer">${m}</div>`
+  ).join('');
+  // load trending from supabase - top liked drops
+  const { data } = await sb.from('drops').select('*').order('likes',{ascending:false}).limit(5);
+  const list = document.getElementById('trending-list');
+  if(!data||!data.length){ list.innerHTML=`<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No drops yet — be the first!</div>`; return; }
+  list.innerHTML = data.map((d,i) => {
+    const ph=hash(d.show_title,PCLASS);
+    const poster=d.poster_url?`<img style="width:44px;height:60px;border-radius:8px;object-fit:cover" src="${TMDB_IMG}${d.poster_url}" loading="lazy">`:`<div style="width:44px;height:60px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px" class="${ph}">🎬</div>`;
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;color:var(--purple);width:24px;text-align:center">${i+1}</div>
+      ${poster}
+      <div style="flex:1"><div style="font-size:14px;font-weight:600;margin-bottom:2px">${d.show_title}</div><div style="font-size:11px;color:var(--muted)">${d.show_year||''} · ${d.show_lang||''}</div></div>
+      <div style="font-size:11px;color:#f472b6;font-weight:600">❤️ ${num(d.likes||0)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function discoverByMood(mood){
+  S.activeFilter = mood;
+  showScreen('feed');
+}
+
+let dtimer, discoverCache=[];
+async function handleDiscoverSearch(val){
+  clearTimeout(dtimer);
+  const rc = document.getElementById('discover-results');
+  if(!val.trim()){ rc.innerHTML=''; return; }
+  dtimer = setTimeout(async()=>{
+    rc.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">Searching...</div>';
+    try{
+      const res = await fetch('https://api.themoviedb.org/3/search/multi?api_key='+TMDB_KEY+'&query='+encodeURIComponent(val)+'&include_adult=false&language=en-US&page=1');
+      const data = await res.json();
+      const results = (data.results||[]).filter(r=>r.media_type==='movie'||r.media_type==='tv').slice(0,5);
+      if(!results.length){ rc.innerHTML=`<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">No results</div>`; return; }
+      rc.innerHTML=`<div class="search-results" style="margin-bottom:16px">${results.map(r=>{
+        const title=r.title||r.name, year=(r.release_date||r.first_air_date||'').slice(0,4), rating=r.vote_average?r.vote_average.toFixed(1):'N/A';
+        const poster=r.poster_path?`<img class="sr-poster" src="${TMDB_IMG}${r.poster_path}" loading="lazy">`:`<div class="sr-poster" style="background:var(--surface);display:flex;align-items:center;justify-content:center">🎬</div>`;
+        return '<div class="sr-item" style="cursor:pointer" onclick="showScreen('post')"><span style="display:none">'+i+'</span>'+poster+'<div class="sr-info"><div class="sr-title">'+title+'</div><div class="sr-meta">'+year+' · '+(r.media_type==='tv'?'TV Series':'Movie')+'</div></div><div class="sr-rating">⭐ '+rating+'</div></div>';
+      }).join('')}</div>`;
+    } catch(e){ rc.innerHTML=`<div style="padding:14px;color:#F09595;font-size:13px;text-align:center">Search failed</div>`; }
+  }, 400);
+}
+
+// ── SAVED ────────────────────────────────────────────────────
+async function loadSaved(){
+  const list = document.getElementById('saved-list');
+  list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spinner" style="margin:0 auto 16px"></div>Loading...</div>`;
+  if(!S.user){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">Sign in to see your watchlist</div>`; return; }
+  const { data:savedData } = await sb.from('saved').select('drop_id').eq('user_id',S.user.id);
+  if(!savedData||!savedData.length){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;line-height:1.8">Nothing saved yet!<br>Tap 📎 on any drop to save it.</div>`; return; }
+  const ids = savedData.map(r=>r.drop_id);
+  const { data:drops } = await sb.from('drops').select('*').in('id',ids);
+  if(!drops||!drops.length){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">Nothing saved yet!</div>`; return; }
+  list.innerHTML = drops.map(d => {
+    const ph=hash(d.show_title,PCLASS);
+    const poster=d.poster_url?`<img style="width:56px;height:78px;border-radius:10px;object-fit:cover" src="${TMDB_IMG}${d.poster_url}" loading="lazy">`:`<div style="width:56px;height:78px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px" class="${ph}">🎬</div>`;
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center">
+      ${poster}
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:600;margin-bottom:3px">${d.show_title}</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${d.show_year||''} · ${d.show_lang||''} · ⭐${d.show_rating||'N/A'}</div>
+        <div style="font-size:12px;color:#d4d4f0;line-height:1.4">"${d.caption}"</div>
+      </div>
+      <button class="watch-btn" onclick="window.open('https://www.netflix.com/search?q=${encodeURIComponent(d.show_title)}','_blank')">▶ Watch</button>
+    </div>`;
+  }).join('');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────
+async function loadNotifications(){
+  const list = document.getElementById('notif-list');
+  if(!S.user){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">Sign in to see notifications</div>`; return; }
+  // get likes on user's drops
+  const { data:myDrops } = await sb.from('drops').select('id,show_title').eq('user_id',S.user.id);
+  if(!myDrops||!myDrops.length){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;line-height:1.8">No notifications yet!<br>Drop a pick and see who likes it 🔥</div>`; return; }
+  const dropIds = myDrops.map(d=>d.id);
+  const { data:likes } = await sb.from('likes').select('drop_id,user_id,created_at').in('drop_id',dropIds).order('created_at',{ascending:false}).limit(20);
+  if(!likes||!likes.length){ list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;line-height:1.8">No likes yet!<br>Share your drops to get likes 🔥</div>`; return; }
+  const dropMap = Object.fromEntries(myDrops.map(d=>[d.id,d.show_title]));
+  list.innerHTML = likes.map(l => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="font-size:24px">❤️</div>
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--text)">Someone liked your drop of <strong>${dropMap[l.drop_id]||'a show'}</strong></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${ago(l.created_at)}</div>
+      </div>
+    </div>`).join('');
 }
 
 // ── BOOT ────────────────────────────────────────────────────
